@@ -169,22 +169,31 @@ class ADSRLoss:
 
 
 print("Starting...")
-ac = AudioController(5)
 
-#for n in range(10):
-    #ac.addElement(0, HarmonicElement(220 * 2**n/(2*math.pi), 1/2**n, 4))
+ifile = "Kamado_Tanjiro_no_Uta.in"
 
-loss = ADSRLoss(1, 0.8, 0.3, 0.3, 0.25, 0.02)
-ac.addElement(0, HarmonicElement(440, 1, 3, loss))
-ac.addElement(1.3, HarmonicElement(440 * pow(2, -3 / 12), 0.5, 4, loss))
+loss = ADSRLoss(1, 0.8, 0.3, 0.1, 0.25, 0.02)
+p = parser.Parser(open(ifile, "r"))
+p.parse()
+sheets = p.pSheets
+temp = p.pParams["temp"] / 1000
+total = p.pMaxDuration * temp
+
+ac = AudioController(total)
+for offset, note in sheets:
+    ac.addElement(offset * temp, HarmonicElement(note.getFrequency(), 1, note.duration * temp, loss))
+
+#ac.addElement(0, HarmonicElement(440, 1, 3, loss))
+#ac.addElement(1.3, HarmonicElement(440 * pow(2, -3 / 12), 0.5, 4, loss))
 
 #ac.addElement(0, OrganElement(440 * pow(2, 0 / 12), 1, 1, loss))
 #ac.addElement(0, OrganElement(440 * pow(2, -3 / 12), 1, 1, loss))
 #ac.addElement(0, OrganElement(440 * pow(2, -7 / 12), 1, 1, loss))
 
-print("Saving to 'out.wav'...")
 wd = ac.getWavData()
+ofile = '.'.join(ifile.split('.')[:-1]) + '.wav'
+print(f"Saving to '{ofile}'...")
 wd.normalize()
 wd.adjust(0.9)
-wd.save("out.wav")
+wd.save(ofile)
 print("Done.")
